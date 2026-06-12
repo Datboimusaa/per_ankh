@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       String  @id @default(cuid())
+  name     String
+  username String  @unique
+  email    String  @unique
+  password String
+  avatar   String?
+
+  isVerified Boolean @default(false)
+
+  verificationToken       String?
+  verificationTokenExpiry DateTime?
+
+  resetPasswordToken       String?
+  resetPasswordTokenExpiry DateTime?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  ownedWorkspaces Workspace[]
+  members         Member[]
+  refreshTokens   RefreshToken[]
+  taskAssignees   TaskAssignee[]
+  notes           Note[]
+  comments        Comment[]
+  files           File[]
+  notifications   Notification[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  avatar    String?
+  owner     User     @relation(fields: [ownerId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members Member[]
+  boards  Board[]
+  notes   Note[]
+}
+
+model Member {
+  id          String     @id @default(cuid())
+  role        MemberRole @default(MEMBER)
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model Board {
+  id          String    @id @default(cuid())
+  name        String
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  columns Column[]
+  labels  Label[]
+}
+
+model Column {
+  id        String   @id @default(cuid())
+  name      String
+  position  Int
+  boardId   String
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks Task[]
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  position    Int
+  dueDate     DateTime?
+  columnId    String
+  column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  assignees TaskAssignee[]
+  labels    TaskLabel[]
+  comments  Comment[]
+  files     File[]
+}
+
+model TaskAssignee {
+  id     String @id @default(cuid())
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+}
+
+model Label {
+  id      String @id @default(cuid())
+  name    String
+  color   String
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  tasks TaskLabel[]
+}
+
+model TaskLabel {
+  id      String @id @default(cuid())
+  taskId  String
+  task    Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  labelId String
+  label   Label  @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, labelId])
+}
+
+model Note {
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  comments Comment[]
+  files    File[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  noteId String?
+  note   Note?   @relation(fields: [noteId], references: [id], onDelete: Cascade)
+}
+
+model File {
+  id         String   @id @default(cuid())
+  name       String
+  url        String
+  size       Int
+  mimeType   String
+  uploaderId String
+  uploader   User     @relation(fields: [uploaderId], references: [id])
+  createdAt  DateTime @default(now())
+
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  noteId String?
+  note   Note?   @relation(fields: [noteId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  read      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  taskId String?
+  noteId String?
+}

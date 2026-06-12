@@ -1,0 +1,32 @@
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import { PORT, FRONTEND_URL } from './src/config/env.js';
+import authRoutes from './src/routes/auth.routes.js';
+import errorMiddleware from './src/middlewares/error.middleware.js';
+
+const app = express();
+
+
+/* MIDDLEWARES */
+app.use(express.json());
+app.use(cors({
+    origin: `${FRONTEND_URL}`,
+    credentials: true
+}));
+app.use(cookieParser());
+
+
+/* ROUTES */
+app.get('/', (req, res) => {
+    res.send("API is running");
+});
+app.use('/api/auth', authRoutes)
+
+/* ERROR MIDDLEWARE */
+app.use(errorMiddleware);
+
+
+app.listen(PORT, ()=> {
+    console.log(`API is running on http://localhost:${PORT}`);
+});

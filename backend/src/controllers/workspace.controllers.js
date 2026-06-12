@@ -106,6 +106,21 @@ export async function getWorkspace(req, res, next) {
       throw error;
     }
 
+    const membership = await prisma.member.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId: user.id,
+          workspaceId: id,
+        },
+      },
+    });
+
+    if (!membership) {
+      const error = new Error("Forbidden");
+      error.statusCode = 403;
+      throw error;
+    }
+
     return res.status(200).json({ success: true, data: workspace });
   } catch (error) {
     next(error);
@@ -127,6 +142,12 @@ export async function updateWorkspace(req, res, next) {
       }
       const error = new Error("Workspace not found");
       error.statusCode = 404;
+      throw error;
+    }
+
+    if (existingWorkspace.ownerId !== user.id) {
+      const error = new Error("Forbidden");
+      error.statusCode = 403;
       throw error;
     }
 
@@ -179,13 +200,19 @@ export async function deleteWorkspace(req, res, next) {
       throw error;
     }
 
+    if (existingWorkspace.ownerId !== user.id) {
+      const error = new Error("Forbidden");
+      error.statusCode = 403;
+      throw error;
+    }
+
     await prisma.workspace.delete({
       where: { id },
     });
 
     if (workspace.avatar) {
       const urlParts = workspace.avatar.split("/");
-      const fileWithExtension = urlParts[urlParts.length - 1]; 
+      const fileWithExtension = urlParts[urlParts.length - 1];
       const filenameWithoutExtension = fileWithExtension.split(".")[0];
       const publicID = `Per_ankh/${filenameWithoutExtension}`;
 

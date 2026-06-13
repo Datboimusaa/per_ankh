@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma.js";
 import cloudinary from "../config/cloudinary.js";
+import { extractPublicId } from "../utils/extractPublicId.js";
 
 export async function createWorkspace(req, res, next) {
   try {
@@ -165,12 +166,9 @@ export async function updateWorkspace(req, res, next) {
     });
 
     if (req.file && existingWorkspace.avatar) {
-      const urlParts = existingWorkspace.avatar.split("/");
-      const fileWithExtension = urlParts[urlParts.length - 1];
-      const publicIdWithoutExtension = fileWithExtension.split(".")[0];
-      const fullOldPublicId = `Per_ankh/${publicIdWithoutExtension}`;
-
-      await cloudinary.uploader.destroy(fullOldPublicId).catch(() => null);
+      await cloudinary.uploader
+        .destroy(extractPublicId(existingWorkspace.avatar))
+        .catch(() => null);
     }
 
     return res.status(200).json({
@@ -211,12 +209,9 @@ export async function deleteWorkspace(req, res, next) {
     });
 
     if (workspace.avatar) {
-      const urlParts = workspace.avatar.split("/");
-      const fileWithExtension = urlParts[urlParts.length - 1];
-      const filenameWithoutExtension = fileWithExtension.split(".")[0];
-      const publicID = `Per_ankh/${filenameWithoutExtension}`;
-
-      await cloudinary.uploader.destroy(publicID).catch(() => null);
+      await cloudinary.uploader
+        .destroy(extractPublicId(workspace.avatar))
+        .catch(() => null);
     }
 
     return res.status(200).json({

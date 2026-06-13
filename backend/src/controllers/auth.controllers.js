@@ -30,10 +30,10 @@ export async function register(req, res, next) {
     }
 
     const existingUsername = await prisma.user.findUnique({
-      where: { username }
+      where: { username },
     });
 
-    if(existingUsername) {
+    if (existingUsername) {
       const error = new Error("Username already taken");
       error.statusCode = 400;
       throw error;
@@ -361,7 +361,6 @@ export async function refresh(req, res, next) {
       .update(incomingToken)
       .digest("hex");
 
-      
     const stored = await prisma.refreshToken.findUnique({
       where: { token: hashedRefreshToken },
     });
@@ -407,8 +406,6 @@ export async function refresh(req, res, next) {
     });
 
     res.status(200).json({ success: true });
-
-
   } catch (error) {
     next(error);
   }

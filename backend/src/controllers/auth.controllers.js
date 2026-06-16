@@ -195,7 +195,7 @@ export async function logout(req, res, next) {
 
 export async function verifyEmail(req, res, next) {
   try {
-    const { token } = req.query;
+    const { token } = req.body;
 
     if (!token) {
       const error = new Error("Token required");

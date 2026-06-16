@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import authMiddleware from '../middlewares/auth.middleware.js';
-import upload from '../middlewares/upload.middleware.js';
+import upload from '../middlewares/imageUpload.middleware.js';
 import { getWorkspaces, getWorkspace, updateWorkspace, deleteWorkspace, createWorkspace } from '../controllers/workspace.controllers.js';
 
 const workspaceRoutes = Router();

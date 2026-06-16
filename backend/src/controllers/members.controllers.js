@@ -148,7 +148,13 @@ export async function removeMember(req, res, next) {
     const { workspaceId, memberId } = req.params;
     const user = req.user;
 
-    // check workspace exists
+
+    if(!workspaceId || !memberId) {
+        const error = new Error('Workspace ID and member ID is required');
+        error.statusCode = 400;
+        throw error
+    }
+
     const workspace = await prisma.workspace.findUnique({
       where: { id: workspaceId },
     });
@@ -165,7 +171,7 @@ export async function removeMember(req, res, next) {
       },
     });
 
-    // check the target member exists
+
     const memberToRemove = await prisma.member.findUnique({
       where: { id: memberId },
     });
@@ -176,7 +182,6 @@ export async function removeMember(req, res, next) {
       throw error;
     }
 
-    // allow removing yourself (leaving) OR OWNER/ADMIN removing others
     const isSelf = memberToRemove.userId === user.id;
     const isPrivileged = requestingMember && ["OWNER", "ADMIN"].includes(requestingMember.role);
 
@@ -186,14 +191,12 @@ export async function removeMember(req, res, next) {
       throw error;
     }
 
-    // owner cannot leave — they must delete the workspace or transfer ownership
     if (isSelf && memberToRemove.role === "OWNER") {
       const error = new Error("Owner cannot leave the workspace. Delete it or transfer ownership first.");
       error.statusCode = 400;
       throw error;
     }
 
-    // admin cannot remove owner
     if (requestingMember.role === "ADMIN" && memberToRemove.role === "OWNER") {
       const error = new Error("Admins cannot remove the owner");
       error.statusCode = 403;

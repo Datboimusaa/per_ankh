@@ -20,9 +20,9 @@ export default function VerifyEmail() {
   useEffect(() => {
     if (token && !hasRun.current) {
       hasRun.current = true;
-      mutation.mutate({ token });
+      mutation.mutate(token);
     }
-  }, [token]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-indigo-50 to-slate-50 px-6">

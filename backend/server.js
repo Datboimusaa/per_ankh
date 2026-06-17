@@ -3,6 +3,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { PORT, FRONTEND_URL } from './src/config/env.js';
 import authRoutes from './src/routes/auth.routes.js';
+import userRoutes from './src/routes/user.routes.js';
+import workspaceRoutes from './src/routes/workspace.routes.js';
 import errorMiddleware from './src/middlewares/error.middleware.js';
 
 const app = express();
@@ -22,6 +24,8 @@ app.get('/', (req, res) => {
     res.send("API is running");
 });
 app.use('/api/auth', authRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/workspaces', workspaceRoutes)
 
 /* ERROR MIDDLEWARE */
 app.use(errorMiddleware);

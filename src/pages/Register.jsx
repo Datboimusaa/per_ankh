@@ -140,7 +140,7 @@ export default function Register() {
                         <button
                             type="submit"
                             disabled={mutation.isPending}
-                            className="w-full flex items-center justify-center gap-2 py-3 mt-2 rounded-xl bg-indigo-600 text-white font-bold transition hover:opacity-90 disabled:opacity-50"
+                            className="w-full cursor-pointer flex items-center justify-center gap-2 py-3 mt-2 rounded-xl bg-indigo-600 text-white font-bold transition hover:opacity-90 disabled:opacity-50"
                         >
                             {mutation.isPending ? "Inscription..." : "S'inscrire"}
                             <ArrowRight size={16} />

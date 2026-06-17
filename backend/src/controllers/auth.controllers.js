@@ -39,7 +39,7 @@ export async function register(req, res, next) {
       throw error;
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
     const verificationTokenRaw = crypto.randomBytes(32).toString("hex");
 
@@ -87,7 +87,7 @@ export async function login(req, res, next) {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      const error = new Error("Invalid credentials");
+      const error = new Error("Étape 1 : req.body est vide ou incomplet");
       error.statusCode = 400;
       throw error;
     }
@@ -97,7 +97,7 @@ export async function login(req, res, next) {
     });
 
     if (!user) {
-      const error = new Error("Invalid credentials");
+      const error = new Error("Étape 2 : L'email n'existe pas en BDD");
       error.statusCode = 400;
       throw error;
     }
@@ -111,7 +111,9 @@ export async function login(req, res, next) {
     const matchingPassword = await bcrypt.compare(password, user.password);
 
     if (!matchingPassword) {
-      const error = new Error("Invalid credentials");
+      const error = new Error(
+        "Étape 3 : Bcrypt - Le mot de passe est incorrect",
+      );
       error.statusCode = 400;
       throw error;
     }
@@ -135,15 +137,15 @@ export async function login(req, res, next) {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: NODE_ENV === "production" ? "none" : "lax",
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: NODE_ENV === "production",
-      sameSite: "none",
-      path: "/auth/refresh",
+      sameSite: NODE_ENV === "production" ? "none" : "lax",
+      path: "/api/auth/refresh",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -174,14 +176,16 @@ export async function logout(req, res, next) {
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: NODE_ENV === "production" ? "none" : "lax", // ← fix
+      maxAge: 15 * 60 * 1000,
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: NODE_ENV === "production",
-      sameSite: "none",
-      path: "/auth/refresh",
+      sameSite: NODE_ENV === "production" ? "none" : "lax", // ← fix
+      path: "/api/auth/refresh",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
@@ -393,16 +397,16 @@ export async function refresh(req, res, next) {
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       secure: NODE_ENV === "production",
-      sameSite: "none",
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      sameSite: NODE_ENV === "production" ? "none" : "lax", // ← fix
+      maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       secure: NODE_ENV === "production",
-      sameSite: "none",
-      path: "/auth/refresh",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      sameSite: NODE_ENV === "production" ? "none" : "lax", // ← fix
+      path: "/api/auth/refresh",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({ success: true });

@@ -22,10 +22,19 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // if 401 and we haven't already retried this request
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 1. Identify routes that should NEVER trigger a refresh cycle
+    const isMeRoute = originalRequest.url.includes('/auth/me') || originalRequest.url.includes('/users/me');
+    const isLoginRoute = originalRequest.url.includes('/auth/login');
+    const isRefreshRoute = originalRequest.url.includes('/auth/refresh');
+
+    // 2. If it's the initial getMe check and it fails 401, let it fail naturally!
+    if (error.response?.status === 401 && isMeRoute && !originalRequest._retry) {
+      return Promise.reject(error); // This allows .catch() to set loading to false!
+    }
+
+    // 3. Standard refresh logic for all subsequent protected API requests
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginRoute && !isRefreshRoute) {
       if (isRefreshing) {
-        // another request is already refreshing — queue this one
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(() => api(originalRequest));
@@ -37,11 +46,14 @@ api.interceptors.response.use(
       try {
         await api.post('/auth/refresh');
         processQueue(null);
-        return api(originalRequest); // retry the original request
+        return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
-        // refresh failed — user needs to log in again
-        window.location.href = '/login';
+        
+        // Only redirect to login if we aren't already on the login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

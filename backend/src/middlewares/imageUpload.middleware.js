@@ -1,6 +1,8 @@
 import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary"
-import cloudinary from '../config/cloudinary.js'
+import CloudinaryStoragePkg from "multer-storage-cloudinary";
+import cloudinary from '../config/cloudinary.js';
+
+const CloudinaryStorage = CloudinaryStoragePkg.default || CloudinaryStoragePkg;
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -24,4 +26,4 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage: storage, fileFilter: fileFilter });
 
-export default upload
+export default upload;

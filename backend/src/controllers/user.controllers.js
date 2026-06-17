@@ -1,4 +1,4 @@
-import prisma from "../config/prisma.js"
+import { prisma } from "../config/prisma.js"
 import { extractPublicId } from "../utils/extractPublicId.js";
 
 export async function getMe(req, res, next) {

@@ -1,11 +1,16 @@
-import { data } from "react-router-dom";
-import prisma from "../config/prisma.js";
+import { prisma } from "../config/prisma.js";
 
 export async function addMember(req, res, next) {
   try {
     const { workspaceId } = req.params;
     const { email, role } = req.body;
     const user = req.user;
+
+    if (!email || !role) {
+      const error = new Error("Email and role are required");
+      error.statusCode = 400;
+      throw error;
+    }
 
     const workspace = await prisma.workspace.findUnique({
       where: { id: workspaceId },
@@ -17,20 +22,12 @@ export async function addMember(req, res, next) {
       throw error;
     }
 
-    if (!email || !role) {
-      const error = new Error("Email and role are required");
-      error.statusCode = 400;
-      throw error;
-    }
 
     const requestingMember = await prisma.member.findUnique({
-      where: { userId: user.id, workspaceId },
+      where: { userId_workspaceId: { userId: user.id, workspaceId } },
     });
 
-    if (
-      !requestingMember ||
-      !["OWNER", "ADMIN"].includes(requestingMember.role)
-    ) {
+    if (!requestingMember || !["OWNER", "ADMIN"].includes(requestingMember.role)) {
       const error = new Error("Forbidden");
       error.statusCode = 403;
       throw error;
@@ -47,9 +44,7 @@ export async function addMember(req, res, next) {
     }
 
     const existingMember = await prisma.member.findUnique({
-      where: {
-        userId_workspaceId: { userId: userToAdd.id, workspaceId },
-      },
+      where: { userId_workspaceId: { userId: userToAdd.id, workspaceId } },
     });
 
     if (existingMember) {
@@ -77,7 +72,7 @@ export async function addMember(req, res, next) {
       },
     });
 
-    return res.status(200).json({success: true , message: "Member added successfully", data: member});
+    return res.status(201).json({ success: true, message: "Member added successfully", data: member });
   } catch (error) {
     next(error);
   }
@@ -96,9 +91,7 @@ export async function updateMemberRole(req, res, next) {
     }
 
     const requestingMember = await prisma.member.findUnique({
-      where: {
-        userId_workspaceId: { userId: user.id, workspaceId },
-      },
+      where: { userId_workspaceId: { userId: user.id, workspaceId } },
     });
 
     if (!requestingMember || requestingMember.role !== "OWNER") {
@@ -107,12 +100,12 @@ export async function updateMemberRole(req, res, next) {
       throw error;
     }
 
-    const memberToUpdate = await prisma.member.findUnique({
-      where: { id: memberId },
+    const memberToUpdate = await prisma.member.findFirst({
+      where: { id: memberId, workspaceId },
     });
 
     if (!memberToUpdate) {
-      const error = new Error("Member not found");
+      const error = new Error("Member not found in this workspace");
       error.statusCode = 404;
       throw error;
     }
@@ -133,11 +126,7 @@ export async function updateMemberRole(req, res, next) {
       },
     });
 
-    return res.status(200).json({
-      success: true,
-      message: "Member role updated successfully",
-      data: member,
-    });
+    return res.status(200).json({ success: true, message: "Member role updated successfully", data: member });
   } catch (error) {
     next(error);
   }
@@ -148,39 +137,25 @@ export async function removeMember(req, res, next) {
     const { workspaceId, memberId } = req.params;
     const user = req.user;
 
-
-    if(!workspaceId || !memberId) {
-        const error = new Error('Workspace ID and member ID is required');
-        error.statusCode = 400;
-        throw error
+    if (!workspaceId || !memberId) {
+      const error = new Error("Workspace ID and member ID are required");
+      error.statusCode = 400;
+      throw error;
     }
 
-    const workspace = await prisma.workspace.findUnique({
-      where: { id: workspaceId },
+    const memberToRemove = await prisma.member.findFirst({
+      where: { id: memberId, workspaceId },
     });
 
-    if (!workspace) {
-      const error = new Error("Workspace not found");
+    if (!memberToRemove) {
+      const error = new Error("Member not found in this workspace");
       error.statusCode = 404;
       throw error;
     }
 
     const requestingMember = await prisma.member.findUnique({
-      where: {
-        userId_workspaceId: { userId: user.id, workspaceId },
-      },
+      where: { userId_workspaceId: { userId: user.id, workspaceId } },
     });
-
-
-    const memberToRemove = await prisma.member.findUnique({
-      where: { id: memberId },
-    });
-
-    if (!memberToRemove) {
-      const error = new Error("Member not found");
-      error.statusCode = 404;
-      throw error;
-    }
 
     const isSelf = memberToRemove.userId === user.id;
     const isPrivileged = requestingMember && ["OWNER", "ADMIN"].includes(requestingMember.role);
@@ -197,7 +172,7 @@ export async function removeMember(req, res, next) {
       throw error;
     }
 
-    if (requestingMember.role === "ADMIN" && memberToRemove.role === "OWNER") {
+    if (requestingMember?.role === "ADMIN" && memberToRemove.role === "OWNER") {
       const error = new Error("Admins cannot remove the owner");
       error.statusCode = 403;
       throw error;

@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma.js"
 import { extractPublicId } from "../utils/extractPublicId.js";
+import cloudinary from "../config/cloudinary.js";
 
 export async function getMe(req, res, next) {
   try {

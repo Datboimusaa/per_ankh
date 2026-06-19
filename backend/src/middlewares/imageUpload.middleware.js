@@ -2,10 +2,10 @@ import multer from "multer";
 import CloudinaryStoragePkg from "multer-storage-cloudinary";
 import cloudinary from '../config/cloudinary.js';
 
-const CloudinaryStorage = CloudinaryStoragePkg.default || CloudinaryStoragePkg;
+const CloudinaryStorageClass = CloudinaryStoragePkg.CloudinaryStorage || CloudinaryStoragePkg.default || CloudinaryStoragePkg;
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+const storage = new CloudinaryStorageClass({
+  cloudinary: { v2: cloudinary },
   params: {
     folder: 'Per_ankh',
     allowed_formats: ['jpg', 'jpeg', 'png'],

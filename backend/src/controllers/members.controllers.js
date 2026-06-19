@@ -132,6 +132,54 @@ export async function updateMemberRole(req, res, next) {
   }
 }
 
+export async function getMembers(req, res, next) {
+  try {
+    const { workspaceId } = req.params;
+    const user = req.user;
+
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+    });
+
+    if (!workspace) {
+      const error = new Error("Workspace not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const requestingMember = await prisma.member.findUnique({
+      where: {
+        userId_workspaceId: { userId: user.id, workspaceId },
+      },
+    });
+
+    if (!requestingMember) {
+      const error = new Error("Forbidden");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const members = await prisma.member.findMany({
+      where: { workspaceId },
+      include: {
+        user: {
+          select: { 
+            id: true, 
+            name: true, 
+            username: true, 
+            avatar: true,
+            email: true 
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({ success: true, data: members });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function removeMember(req, res, next) {
   try {
     const { workspaceId, memberId } = req.params;

@@ -62,6 +62,7 @@ export async function getWorkspaces(req, res, next) {
                     name: true,
                     username: true,
                     avatar: true,
+                    email: true
                   },
                 },
               },
@@ -93,7 +94,7 @@ export async function getWorkspace(req, res, next) {
         members: {
           include: {
             user: {
-              select: { id: true, name: true, username: true, avatar: true },
+              select: { id: true, name: true, username: true, avatar: true, email: true },
             },
           },
         },
@@ -110,7 +111,7 @@ export async function getWorkspace(req, res, next) {
     const membership = await prisma.member.findUnique({
       where: {
         userId_workspaceId: {
-          userId: user.id,
+          userId: req.user.id,
           workspaceId: id,
         },
       },
@@ -146,7 +147,7 @@ export async function updateWorkspace(req, res, next) {
       throw error;
     }
 
-    if (existingWorkspace.ownerId !== user.id) {
+    if (existingWorkspace.ownerId !== req.user.id) {
       const error = new Error("Forbidden");
       error.statusCode = 403;
       throw error;
@@ -198,7 +199,7 @@ export async function deleteWorkspace(req, res, next) {
       throw error;
     }
 
-    if (existingWorkspace.ownerId !== user.id) {
+    if (workspace.ownerId !== req.user.id) {
       const error = new Error("Forbidden");
       error.statusCode = 403;
       throw error;

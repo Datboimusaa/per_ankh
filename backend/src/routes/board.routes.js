@@ -1,14 +1,13 @@
-import prisma from "../config/prisma.js"
-import { Router } from "express"
+import { Router } from "express";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import { createBoard, getBoards, getBoard, updateBoard, deleteBoard } from "../controllers/board.controllers.js";
 
-const boardRoutes = Router();
+const boardRoutes = Router({ mergeParams: true });
 
-boardRoutes.post("/:workspaceId/boards", authMiddleware, createBoard);
-boardRoutes.get("/:workspaceId/boards", authMiddleware, getBoards);
-boardRoutes.get("/:workspaceId/boards/:boardId", authMiddleware, getBoard);
-boardRoutes.patch("/:workspaceId/boards/:boardId", authMiddleware, updateBoard);
-boardRoutes.delete("/:workspaceId/boards/:boardId", authMiddleware, deleteBoard);
+boardRoutes.post("/", authMiddleware, createBoard);
+boardRoutes.get("/", authMiddleware, getBoards);
+boardRoutes.get("/:boardId", authMiddleware, getBoard);
+boardRoutes.patch("/:boardId", authMiddleware, updateBoard);
+boardRoutes.delete("/:boardId", authMiddleware, deleteBoard);
 
-export default boardRoutes
+export default boardRoutes;

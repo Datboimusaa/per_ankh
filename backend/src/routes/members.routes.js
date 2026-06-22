@@ -2,11 +2,11 @@ import { Router } from "express";
 import  authMiddleware  from "../middlewares/auth.middleware.js"
 import { addMember, updateMemberRole, removeMember, getMembers } from "../controllers/members.controllers.js";
 
-const memberRoutes = Router();
+const memberRoutes = Router({ mergeParams: true });
 
-memberRoutes.post('/:workspaceId/members', authMiddleware, addMember)
-memberRoutes.patch('/:workspaceId/members/:memberId', authMiddleware, updateMemberRole)
-memberRoutes.delete('/:workspaceId/members/:memberId', authMiddleware, removeMember)
-memberRoutes.get('/:workspaceId/members', authMiddleware, getMembers)
+memberRoutes.post('/', authMiddleware, addMember)
+memberRoutes.patch('/:memberId', authMiddleware, updateMemberRole)
+memberRoutes.delete('/:memberId', authMiddleware, removeMember)
+memberRoutes.get('/', authMiddleware, getMembers)
 
 export default memberRoutes

@@ -8,22 +8,28 @@ const storage = new CloudinaryStorageClass({
   cloudinary: { v2: cloudinary },
   params: {
     folder: 'Per_ankh',
-    allowed_formats: ['jpg', 'jpeg', 'png'],
-    transformation: [{ width: 500, height: 500, crop: 'limit' }]
+    resource_type: 'auto',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'pdf', 'docx', 'txt', 'zip'],
   },
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-  if (allowedTypes.includes(file.mimetype)) {
+  const allowedMimeTypes = [
+    'image/jpeg', 'image/jpg', 'image/png', 
+    'application/pdf', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+    'text/plain', 
+    'application/zip'
+  ];
+
+  if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    const error = new Error('File format not supported. Use jpeg, jpg or png.');
+    const error = new Error('File format not supported.');
     error.statusCode = 400;
     cb(error, false);
   }
 };
 
 const upload = multer({ storage: storage, fileFilter: fileFilter });
-
 export default upload;

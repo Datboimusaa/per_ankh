@@ -1,5 +1,5 @@
 import { Router } from "express"
-import upload from "../middlewares/imageUpload.middleware.js"
+import upload from "../middlewares/upload.middleware.js"
 import authMiddleware from "../middlewares/auth.middleware.js";
 import { getMe, updateMe } from "../controllers/user.controllers.js"
  

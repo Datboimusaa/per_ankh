@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma.js";
+import { createAndSendNotification } from "../services/notification.service.js";
 
 export async function addMember(req, res, next) {
   try {
@@ -71,6 +72,14 @@ export async function addMember(req, res, next) {
         },
       },
     });
+
+    // Send workspace invite notification to the added user (background)
+    const io = req.app.get('io');
+    createAndSendNotification(io, {
+      userId: userToAdd.id,
+      type: "WORKSPACE_INVITE",
+      message: `${user.name || "Quelqu'un" } vous a invité à rejoindre l'espace de travail: ${workspace.name}`,
+    }).catch(err => console.error("Notification send failed:", err));
 
     return res.status(201).json({ success: true, message: "Member added successfully", data: member });
   } catch (error) {

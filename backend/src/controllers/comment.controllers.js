@@ -33,7 +33,7 @@ export async function createComment(req, res, next) {
       },
       include: {
         user: {
-          select: { id: true, name: true, avatarUrl: true }
+          select: { id: true, name: true, avatar: true }
         }
       }
     });
@@ -87,7 +87,7 @@ export async function updateComment(req, res, next) {
       data: { content: content.trim() },
       include: {
         user: {
-          select: { id: true, name: true, avatarUrl: true }
+          select: { id: true, name: true, avatar: true }
         }
       }
     });

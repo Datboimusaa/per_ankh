@@ -41,7 +41,7 @@ export async function assignMember(req, res, next) {
       include: {
         member: {
           include: {
-            user: { select: { id: true, name: true, avatarUrl: true } }
+            user: { select: { id: true, name: true, avatar: true } }
           }
         }
       }
@@ -150,7 +150,7 @@ export async function getTaskAssignees(req, res, next) {
       include: {
         member: {
           include: {
-            user: { select: { id: true, name: true, avatarUrl: true } }
+            user: { select: { id: true, name: true, avatar: true } }
           }
         }
       }

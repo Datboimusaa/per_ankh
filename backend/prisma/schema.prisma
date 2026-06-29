@@ -28,7 +28,6 @@ model User {
   ownedWorkspaces Workspace[]
   members         Member[]
   refreshTokens   RefreshToken[]
-  taskAssignees   TaskAssignee[]
   notes           Note[]
   comments        Comment[]
   files           File[]
@@ -72,6 +71,8 @@ model Member {
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspaceId String
   workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  taskAssignees TaskAssignee[] // Keep this! Clean relation back.
 
   @@unique([userId, workspaceId])
 }
@@ -118,13 +119,15 @@ model Task {
 }
 
 model TaskAssignee {
-  id     String @id @default(cuid())
-  taskId String
-  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  taskId   String
+  task     Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  @@unique([taskId, userId])
+
+  @@unique([taskId, memberId]) 
 }
 
 model Label {

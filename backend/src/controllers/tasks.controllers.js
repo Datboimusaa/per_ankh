@@ -88,7 +88,7 @@ export async function getTask(req, res, next) {
             member: {
               include: {
                 user: {
-                  select: { id: true, name: true, avatarUrl: true }
+                  select: { id: true, name: true, avatar: true }
                 }
               }
             }
@@ -97,13 +97,10 @@ export async function getTask(req, res, next) {
         comments: {
           orderBy: { createdAt: "desc" },
           include: {
-            user: {
-              select: { id: true, name: true, avatarUrl: true }
+            author: { // Note: Your schema uses 'author' relation name for Comment model
+              select: { id: true, name: true, avatar: true }
             }
           }
-        },
-        notes: {
-          orderBy: { updatedAt: "desc" }
         },
         files: {
           orderBy: { createdAt: "desc" }
@@ -117,6 +114,7 @@ export async function getTask(req, res, next) {
       throw error;
     }
 
+    // Verify requesting user actually belongs to this workspace context
     const member = await prisma.member.findUnique({
       where: {
         userId_workspaceId: { 
